@@ -36,6 +36,7 @@ class PersonAgent(Agent):
     def step(self):
         """processo di infezione, calcolo probabilità di infettare e morire"""
         if self.isAlive:
+            'calcolo infezione e morte'
             if self.virus is not None:
                 vittime = self.model.grid.get_neighborhood(pos=self.pos, moore=False)
                 for x, y in vittime:
@@ -65,6 +66,7 @@ class MondoModel(Model):
         self.popolazione = popolazione
         self.grid = SingleGrid(width, height, True)
         self.schedule = RandomActivation(self)
+        self.points = []
         # Create agents
         for i in range(self.popolazione):
             a = PersonAgent(i, self)
@@ -80,6 +82,20 @@ class MondoModel(Model):
     def step(self):
         '''Advance the model by one step.'''
         self.schedule.step()
+        suscettibili = 0
+        infetti = 0
+        morti = 0
+        immuni = 0
+        for persona in self.schedule.agents:
+            if persona.isAlive is False:
+                morti += 1
+            elif persona.isImmune is True:
+                immuni += 1
+            elif persona.virus is not None:
+                infetti += 1
+            else:
+                suscettibili += 1
+        self.points.append([suscettibili, infetti, morti, immuni])
 
     def crea_grafico(self):
         global_health_status = np.zeros((self.grid.width, self.grid.height))
@@ -101,9 +117,14 @@ class MondoModel(Model):
         plt.colorbar(img, ticks=[0, 1, 2, 3, 4])
         plt.show()
 
+    def crea_grafico_2(self):
+        matplotlib.pyplot.plot(self.points)
+        matplotlib.pyplot.show()
+
 
 if __name__ == '__main__':
     myMondo = MondoModel(9000, 100, 100)
     for i in range(50):
         myMondo.step()
         myMondo.crea_grafico()
+    myMondo.crea_grafico_2()
